@@ -1,0 +1,480 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using UnityEngine;
+using KModkit;
+
+public class Mazery : MonoBehaviour {
+
+    public KMBombInfo Bomb;
+    public KMAudio Audio;
+    public KMSelectable[] Buttons;
+    public Material[] Colors;
+    public GameObject[] Nodes;
+
+    //Logging
+    static int moduleIdCounter = 1;
+    int moduleId;
+    private bool moduleSolved;
+
+    string VennDiagramOfColors = "MIKWCTLGNOPRBYA";
+    int Counter = 0;
+    int ColorCounter = 0;
+    private string[][] Maze = new string[11][]
+      {
+          new string[] { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" },
+          new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
+          new string[] { "█", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "█" },
+          new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
+          new string[] { "█", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "█" },
+          new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
+          new string[] { "█", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "█" },
+          new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
+          new string[] { "█", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "▓", "█" },
+          new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
+          new string[] { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" },
+      };
+      int[] Initalthingslol = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
+      int[] Posibilities = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
+      private bool[][] visited = new bool[5][]
+      {
+          new bool[] { false, false, false, false, false },
+          new bool[] { false, false, false, false, false },
+          new bool[] { false, false, false, false, false },
+          new bool[] { false, false, false, false, false },
+          new bool[] { false, false, false, false, false }
+      };
+      List<int> GetAvenues(int x, int y)
+      {
+          List<int> temp = new List<int>();
+          if (y - 1 >= 0)
+              if (visited[x][y - 1])
+                  temp.Add(0);
+          if (y + 1 <= 4)
+              if (visited[x][y + 1])
+                  temp.Add(1);
+          if (x - 1 >= 0)
+              if (visited[x - 1][y])
+                  temp.Add(2);
+          if (x + 1 <= 4)
+              if (visited[x + 1][y])
+                  temp.Add(3);
+          return temp;
+      }
+      bool HasVisitors(int x, int y)
+      {
+          if (y - 1 >= 0)
+              if (visited[x][y - 1])
+                  return true;
+          if (y + 1 <= 4)
+              if (visited[x][y + 1])
+                  return true;
+          if (x - 1 >= 0)
+              if (visited[x - 1][y])
+                  return true;
+          if (x + 1 <= 4)
+              if (visited[x + 1][y])
+                  return true;
+          return false;
+      }
+      bool ContainsFalse()
+      {
+          for (int i = 0; i < 5; i++)
+          {
+              for (int j = 0; j < 5; j++)
+              {
+                  if (visited[i][j] == false)
+                      return true;
+              }
+          }
+          return false;
+      }
+      bool Active = false;
+      string MazeForTraversingSinceIAmBigDumbass = "";
+      int Traveling = 0;
+      bool[] NodesTraveled = {false, false, false};
+      int[] NodesPosition = {0,0,0};
+      bool OnTarget = false;
+
+    void Awake () {
+        moduleId = moduleIdCounter++;
+        foreach (KMSelectable Button in Buttons) {
+            Button.OnInteract += delegate () { ButtonPress(Button); return false; };
+        }
+    }
+
+    void Start () {
+      MazeDisplay();
+    }
+
+    void ButtonPress (KMSelectable Button) {
+      Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, Button.transform);
+      if (moduleSolved) {
+        return;
+      }
+      if (!Active) {
+        Active = true;
+        Counter = 0;
+        for (int i = 0; i < Nodes.Length; i++) {
+          Nodes[Counter].GetComponent<MeshRenderer>().material = Colors[3];
+          Counter++;
+        }
+        Posibilities.Shuffle();
+        Traveling = Posibilities[0];
+        Nodes[Array.IndexOf(Initalthingslol, Posibilities[0])].GetComponent<MeshRenderer>().material = Colors[9];
+        for (int i = 0; i < NodesPosition.Length; i++) {
+          while ((MazeForTraversingSinceIAmBigDumbass[NodesPosition[i]] != '░') || (NodesPosition[i] == NodesPosition[0] && i != 0 || NodesPosition[i] == NodesPosition[1] && i != 1 || NodesPosition[i] == NodesPosition[2] && i != 2)) {
+            NodesPosition[i] = Posibilities[i + 1];
+            Nodes[Array.IndexOf(Initalthingslol, Posibilities[i + 1])].GetComponent<MeshRenderer>().material = Colors[4];
+          }
+        }
+      }
+      else {
+        if (Button == Buttons[0]) {
+          if (MazeForTraversingSinceIAmBigDumbass[Traveling + 11] != '░') {
+            GetComponent<KMBombModule>().HandleStrike();
+            MazeDisplay();
+            Active = false;
+            OnTarget = false;
+            for (int i = 0; i < 3; i++) {
+              NodesTraveled[i] = false;
+              NodesPosition[i] = 0;
+            }
+          }
+          else {
+            if (OnTarget) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[4];
+              OnTarget = false;
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[3];
+            }
+            Traveling += 22;
+            bool[] JustCheckingIn = {false, false, false};
+            for (int i = 1; i < 4; i++) {
+              if (Traveling == Posibilities[i]) {
+                NodesTraveled[i - 1] = !NodesTraveled[i - 1];
+                OnTarget = true;
+              }
+              else {
+                JustCheckingIn[i - 1] = true;
+              }
+            }
+            if (JustCheckingIn[0] && JustCheckingIn[1] && JustCheckingIn[2]) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[9];
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[10];
+            }
+          }
+        }
+        else if (Button == Buttons[1]) {
+          if (MazeForTraversingSinceIAmBigDumbass[Traveling - 11] != '░') {
+            GetComponent<KMBombModule>().HandleStrike();
+            MazeDisplay();
+            Active = false;
+            OnTarget = false;
+            for (int i = 0; i < 3; i++) {
+              NodesTraveled[i] = false;
+              NodesPosition[i] = 0;
+            }
+          }
+          else {
+            if (OnTarget) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[4];
+              OnTarget = false;
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[3];
+            }
+            Traveling -= 22;
+            bool[] JustCheckingIn = {false, false, false};
+            for (int i = 1; i < 4; i++) {
+              if (Traveling == Posibilities[i]) {
+                NodesTraveled[i - 1] = !NodesTraveled[i - 1];
+                OnTarget = true;
+              }
+              else {
+                JustCheckingIn[i - 1] = true;
+              }
+            }
+            if (JustCheckingIn[0] && JustCheckingIn[1] && JustCheckingIn[2]) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[9];
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[10];
+            }
+          }
+        }
+        else if (Button == Buttons[2]) {
+          if (MazeForTraversingSinceIAmBigDumbass[Traveling + 1] != '░') {
+            GetComponent<KMBombModule>().HandleStrike();
+            MazeDisplay();
+            Active = false;
+            OnTarget = false;
+            for (int i = 0; i < 3; i++) {
+              NodesTraveled[i] = false;
+              NodesPosition[i] = 0;
+            }
+          }
+          else {
+            if (OnTarget) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[4];
+              OnTarget = false;
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[3];
+            }
+            Traveling += 2;
+            bool[] JustCheckingIn = {false, false, false};
+            for (int i = 1; i < 4; i++) {
+              if (Traveling == Posibilities[i]) {
+                NodesTraveled[i - 1] = !NodesTraveled[i - 1];
+                OnTarget = true;
+              }
+              else {
+                JustCheckingIn[i - 1] = true;
+              }
+            }
+            if (JustCheckingIn[0] && JustCheckingIn[1] && JustCheckingIn[2]) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[9];
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[10];
+            }
+          }
+        }
+        else if (Button == Buttons[3]) {
+          if (MazeForTraversingSinceIAmBigDumbass[Traveling - 1] != '░') {
+            GetComponent<KMBombModule>().HandleStrike();
+            MazeDisplay();
+            Active = false;
+            OnTarget = false;
+            for (int i = 0; i < 3; i++) {
+              NodesTraveled[i] = false;
+              NodesPosition[i] = 0;
+            }
+          }
+          else {
+            if (OnTarget) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[4];
+              OnTarget = false;
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[3];
+            }
+            Traveling -= 2;
+            bool[] JustCheckingIn = {false, false, false};
+            for (int i = 1; i < 4; i++) {
+              if (Traveling == Posibilities[i]) {
+                NodesTraveled[i - 1] = !NodesTraveled[i - 1];
+                OnTarget = true;
+              }
+              else {
+                JustCheckingIn[i - 1] = true;
+              }
+            }
+            if (JustCheckingIn[0] && JustCheckingIn[1] && JustCheckingIn[2]) {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[9];
+            }
+            else {
+              Nodes[Array.IndexOf(Initalthingslol, Traveling)].GetComponent<MeshRenderer>().material = Colors[10];
+            }
+          }
+        }
+        if (NodesTraveled[0] && NodesTraveled[1] && NodesTraveled[2]) {
+          GetComponent<KMBombModule>().HandlePass();
+          moduleSolved = true;
+        }
+      }
+    }
+
+    void GenerateMaze()
+      {
+          int[] vals = new int[] { 1, 3, 5, 7, 9 };
+          int x = UnityEngine.Random.Range(0, 5);
+          int y = UnityEngine.Random.Range(0, 5);
+          Debug.Log("Starting position: (" + x + ", " + y + ")");
+          while (ContainsFalse())
+          {
+              visited[x][y] = true;
+              // U, D, L, R
+              string[] moves = new string[4];
+              List<int> posDirs = new List<int>();
+              moves[0] = Maze[vals[y] - 1][vals[x]];
+              moves[1] = Maze[vals[y] + 1][vals[x]];
+              moves[2] = Maze[vals[y]][vals[x] - 1];
+              moves[3] = Maze[vals[y]][vals[x] + 1];
+              if (moves[0] == "▓")
+              {
+                  if (!visited[x][y - 1])
+                      posDirs.Add(0);
+              }
+              if (moves[1] == "▓")
+              {
+                  if (!visited[x][y + 1])
+                      posDirs.Add(1);
+              }
+              if (moves[2] == "▓")
+              {
+                  if (!visited[x - 1][y])
+                      posDirs.Add(2);
+              }
+              if (moves[3] == "▓")
+              {
+                  if (!visited[x + 1][y])
+                      posDirs.Add(3);
+              }
+              if (posDirs.Count == 0)
+              {
+                  Debug.Log("No possible moves, getting new start");
+                  bool found = false;
+                  for (int i = 0; i < 5; i++)
+                  {
+                      for (int j = 0; j < 5; j++)
+                      {
+                          if (!visited[i][j] && HasVisitors(i, j))
+                          {
+                              x = i;
+                              y = j;
+                              Debug.Log("New start: (" + x + ", " + y + ")");
+                              List<int> newAvs = GetAvenues(x, y);
+                              int num = UnityEngine.Random.Range(1, newAvs.Count);
+                              for (int k = 0; k < num; k++)
+                              {
+                                  int choice = UnityEngine.Random.Range(0, newAvs.Count);
+                                  if (newAvs[choice] == 0)
+                                  {
+                                      Maze[vals[y] - 1][vals[x]] = "░";
+                                  }
+                                  else if (newAvs[choice] == 1)
+                                  {
+                                      Maze[vals[y] + 1][vals[x]] = "░";
+                                  }
+                                  else if (newAvs[choice] == 2)
+                                  {
+                                      Maze[vals[y]][vals[x] - 1] = "░";
+                                  }
+                                  else if (newAvs[choice] == 3)
+                                  {
+                                      Maze[vals[y]][vals[x] + 1] = "░";
+                                  }
+                                  string[] logNames = new string[] { "UP", "DOWN", "LEFT", "RIGHT" };
+                                  Debug.Log("Removing a wall " + logNames[newAvs[choice]] + " from start");
+                                  newAvs.RemoveAt(choice);
+                              }
+                              visited[x][y] = true;
+                              found = true;
+                              break;
+                          }
+                      }
+                      if (found)
+                          break;
+                  }
+              }
+              else
+              {
+                  int choice = UnityEngine.Random.Range(0, posDirs.Count);
+                  if (posDirs[choice] == 0)
+                  {
+                      Maze[vals[y] - 1][vals[x]] = "░";
+                      y--;
+                  }
+                  else if (posDirs[choice] == 1)
+                  {
+                      Maze[vals[y] + 1][vals[x]] = "░";
+                      y++;
+                  }
+                  else if (posDirs[choice] == 2)
+                  {
+                      Maze[vals[y]][vals[x] - 1] = "░";
+                      x--;
+                  }
+                  else if (posDirs[choice] == 3)
+                  {
+                      Maze[vals[y]][vals[x] + 1] = "░";
+                      x++;
+                  }
+                  string[] logNames = new string[] { "UP", "DOWN", "LEFT", "RIGHT" };
+                  Debug.Log("Found moves, going " + logNames[posDirs[choice]] + " to (" + x + ", " + y + ")");
+              }
+          }
+          string Mazelog = "";
+          for (int i = 0; i < 11; i++)
+          {
+              for (int j = 0; j < 11; j++)
+              {
+                  Mazelog += Maze[i][j];
+              }
+              if (i != 10)
+                  Mazelog += "\n";
+          }
+          Debug.LogFormat("[Mazery #{0}] The maze is\n{1}", moduleId, Mazelog);
+      }
+
+    void MazeDisplay () {
+      GenerateMaze();
+      Counter = 0;
+      for (int i = 0; i < 11; i++) {
+        if (i % 2 == 1) {
+          for (int j = 0; j < Maze[i].Length; j++) {
+            if (Maze[i][j] == "░" && j % 2 == 1) {
+              ColorCounter = 0;
+              if (Maze[i - 1][j] != "░") {
+                ColorCounter += 1;
+              }
+              if (Maze[i][j - 1] != "░") {
+                ColorCounter += 2;
+              }
+              if (Maze[i][j + 1] != "░") {
+                ColorCounter += 4;
+              }
+              if (Maze[i + 1][j] != "░") {
+                ColorCounter += 8;
+              }
+              Nodes[Counter].GetComponent<MeshRenderer>().material = Colors[ColorCounter];
+              Counter++;
+            }
+          }
+        }
+      }
+      for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+          MazeForTraversingSinceIAmBigDumbass += Maze[i][j];
+        }
+      }
+    }
+
+    #pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"Use !{0} activate to start the module. Use !{0} u/l/d/r to move up/left/down/right. You can chain commands like !{0} lluullddrduld.";
+    #pragma warning restore 414
+
+    IEnumerator ProcessTwitchCommand (string Command) {
+      Command = Command.Trim().ToUpper();
+      if (Command == "ACTIVATE") {
+        Buttons[UnityEngine.Random.Range(0,4)].OnInteract();
+      }
+      else {
+        for (int i = 0; i < Command.Length; i++) {
+          if (Command[i] != 'U' && Command[i] != 'L' && Command[i] != 'D' && Command[i] != 'R') {
+            yield return null;
+            yield return "sendtochaterror I don't understand!";
+            yield break;
+          }
+        }
+        for (int i = 0; i < Command.Length; i++) {
+          if (Command[i] == 'D')
+            Buttons[0].OnInteract();
+          else if (Command[i] == 'U')
+            Buttons[1].OnInteract();
+          else if (Command[i] == 'R')
+            Buttons[2].OnInteract();
+          else if (Command[i] == 'L')
+            Buttons[3].OnInteract();
+          yield return new WaitForSeconds(.1f);
+        }
+      }
+    }
+}
