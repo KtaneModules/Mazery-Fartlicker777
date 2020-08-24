@@ -13,6 +13,11 @@ public class Mazery : MonoBehaviour {
     public KMSelectable[] Buttons;
     public Material[] Colors;
     public GameObject[] Nodes;
+    public KMColorblindMode ColorblindMode;
+    public TextMesh[] ColorblindText;
+    private bool colorblindMode = false;
+
+
 
     //Logging
     static int moduleIdCounter = 1;
@@ -103,10 +108,38 @@ public class Mazery : MonoBehaviour {
         foreach (KMSelectable Button in Buttons) {
             Button.OnInteract += delegate () { ButtonPress(Button); return false; };
         }
+        colorblindMode = ColorblindMode.ColorblindModeActive;
     }
 
     void Start () {
       MazeDisplay();
+    }
+
+    void Update () {
+      for (int i = 0; i < Nodes.Length; i++) {
+        if (colorblindMode) {
+          string nodeColor = Regex.Match(Nodes[i].GetComponent<MeshRenderer>().material.ToString(), @"^([\w\-]+)").Value;
+          switch (nodeColor) {
+            //MIKWCTLGNOPRBYA
+            case "maroon":  ColorblindText[i].text = "M"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "pink":    ColorblindText[i].text = "I"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "black":   ColorblindText[i].text = "K"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "white":   ColorblindText[i].text = "W"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "cyan":    ColorblindText[i].text = "C"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "tan":     ColorblindText[i].text = "T"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "lime":    ColorblindText[i].text = "L"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "green":   ColorblindText[i].text = "G"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "brown":   ColorblindText[i].text = "N"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "orange":  ColorblindText[i].text = "O"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "purple":  ColorblindText[i].text = "P"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "red":     ColorblindText[i].text = "R"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "blue":    ColorblindText[i].text = "B"; ColorblindText[i].color = new Color(255, 255, 255);break;
+            case "yellow":  ColorblindText[i].text = "Y"; ColorblindText[i].color = new Color(0, 0, 0)      ;break;
+            case "grey":    ColorblindText[i].text = "A"; ColorblindText[i].color = new Color(255, 255, 255);break;
+          }
+        }
+        else ColorblindText[i].text = "";
+      }
     }
 
     void ButtonPress (KMSelectable Button) {
@@ -453,18 +486,24 @@ public class Mazery : MonoBehaviour {
 
     IEnumerator ProcessTwitchCommand (string Command) {
       Command = Command.Trim().ToUpper();
-      if (Command == "ACTIVATE") {
+      if (Command == "COLORBLIND") {
+        yield return null;
+        colorblindMode = true;
+      }
+      else if (Command == "ACTIVATE") {
+        yield return null;
         Buttons[UnityEngine.Random.Range(0,4)].OnInteract();
       }
       else {
+        yield return null;
         for (int i = 0; i < Command.Length; i++) {
           if (Command[i] != 'U' && Command[i] != 'L' && Command[i] != 'D' && Command[i] != 'R') {
-            yield return null;
             yield return "sendtochaterror I don't understand!";
             yield break;
           }
         }
         for (int i = 0; i < Command.Length; i++) {
+          if (Command.Length > 1) yield return "strikemessage move #" + (i+1);
           if (Command[i] == 'D')
             Buttons[0].OnInteract();
           else if (Command[i] == 'U')
