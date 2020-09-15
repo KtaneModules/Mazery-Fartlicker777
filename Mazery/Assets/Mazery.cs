@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using KModkit;
+using MazeryGraph;
 
 public class Mazery : MonoBehaviour {
 
@@ -515,5 +516,61 @@ public class Mazery : MonoBehaviour {
           yield return new WaitForSeconds(.1f);
         }
       }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        if (!Active)
+        {
+            Buttons[0].OnInteract();
+            yield return new WaitForSeconds(.1f);
+        }
+        List<Directions> moves = BFS();
+        if (moves == null)
+            throw new Exception("Somehow there is no valid moves to the goal state.");
+        foreach(Directions move in moves)
+        {
+            Buttons[(int) move].OnInteract();
+            yield return new WaitForSeconds(.1f);
+        }
+    }
+
+    List<Directions> BFS()
+    {
+        List<State> visited = new List<State>();
+        State start = new State(Maze, new[] { Traveling % 11 / 2, Traveling / 22 }, NodesPosition.Select(num => new[] { num % 11 / 2, num / 22 }).ToArray(), NodesTraveled.ToArray(), Directions.None);
+        Queue<State> queue = new Queue<State>();
+        Dictionary<State, State> previous = new Dictionary<State, State>();
+        List<Directions> moves = new List<Directions>();
+        queue.Enqueue(start);
+        while (queue.Count != 0)
+        {
+            State currentState = queue.Dequeue();
+            visited.Add(currentState);
+            if (currentState.IsGoal())
+            {
+                while (currentState.ActionToHere != Directions.None)
+                {
+                    moves.Insert(0, currentState.ActionToHere);
+                    currentState = previous[currentState];
+                }
+                if (moves.Count == 0) moves.Add(Directions.None);
+                queue.Clear();
+                visited.Clear();
+                previous.Clear();
+                return moves;
+            }
+
+            List<State> successors = currentState.GetSuccessors();
+            foreach (State successor in successors)
+                if (!queue.Contains(successor) && !visited.Contains(successor))
+                {
+                    queue.Enqueue(successor);
+                    previous.Add(successor, currentState);
+                }
+        }
+        visited.Clear();
+        previous.Clear();
+        return null;
     }
 }
