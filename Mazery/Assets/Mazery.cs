@@ -18,16 +18,17 @@ public class Mazery : MonoBehaviour {
     public TextMesh[] ColorblindText;
     private bool colorblindMode = false;
 
-
-
-    //Logging
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
 
-    string VennDiagramOfColors = "MIKWCTLGNOPRBYA";
+    int[] Initalthingslol = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
+    int[] Posibilities = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
+    int[] NodesPosition = {0,0,0};
     int Counter = 0;
     int ColorCounter = 0;
+    int Traveling = 0;
+
     private string[][] Maze = new string[11][]
       {
           new string[] { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" },
@@ -42,8 +43,9 @@ public class Mazery : MonoBehaviour {
           new string[] { "█", "░", "▓", "░", "▓", "░", "▓", "░", "▓", "░", "█" },
           new string[] { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" },
       };
-      int[] Initalthingslol = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
-      int[] Posibilities = {12, 14, 16, 18, 20, 34, 36, 38, 40, 42, 56, 58, 60, 62, 64, 78, 80, 82, 84, 86, 100, 102, 104, 106, 108};
+      string VennDiagramOfColors = "MIKWCTLGNOPRBYA";
+      string MazeForTraversingSinceIAmBigDumbass = "";
+
       private bool[][] visited = new bool[5][]
       {
           new bool[] { false, false, false, false, false },
@@ -97,11 +99,8 @@ public class Mazery : MonoBehaviour {
           }
           return false;
       }
-      bool Active = false;
-      string MazeForTraversingSinceIAmBigDumbass = "";
-      int Traveling = 0;
       bool[] NodesTraveled = {false, false, false};
-      int[] NodesPosition = {0,0,0};
+      bool Active = false;
       bool OnTarget = false;
 
     void Awake () {
@@ -451,34 +450,26 @@ public class Mazery : MonoBehaviour {
     void MazeDisplay () {
       GenerateMaze();
       Counter = 0;
-      for (int i = 0; i < 11; i++) {
-        if (i % 2 == 1) {
+      for (int i = 0; i < 11; i++)
+        if (i % 2 == 1)
           for (int j = 0; j < Maze[i].Length; j++) {
             if (Maze[i][j] == "░" && j % 2 == 1) {
               ColorCounter = 0;
-              if (Maze[i - 1][j] != "░") {
+              if (Maze[i - 1][j] != "░")
                 ColorCounter += 1;
-              }
-              if (Maze[i][j - 1] != "░") {
+              if (Maze[i][j - 1] != "░")
                 ColorCounter += 2;
-              }
-              if (Maze[i][j + 1] != "░") {
+              if (Maze[i][j + 1] != "░")
                 ColorCounter += 4;
-              }
-              if (Maze[i + 1][j] != "░") {
+              if (Maze[i + 1][j] != "░")
                 ColorCounter += 8;
-              }
               Nodes[Counter].GetComponent<MeshRenderer>().material = Colors[ColorCounter];
               Counter++;
             }
           }
-        }
-      }
-      for (int i = 0; i < 11; i++) {
-        for (int j = 0; j < 11; j++) {
+      for (int i = 0; i < 11; i++)
+        for (int j = 0; j < 11; j++)
           MazeForTraversingSinceIAmBigDumbass += Maze[i][j];
-        }
-      }
     }
 
     #pragma warning disable 414
@@ -487,24 +478,20 @@ public class Mazery : MonoBehaviour {
 
     IEnumerator ProcessTwitchCommand (string Command) {
       Command = Command.Trim().ToUpper();
-      if (Command == "COLORBLIND") {
-        yield return null;
+      yield return null;
+      if (Command == "COLORBLIND")
         colorblindMode = true;
-      }
-      else if (Command == "ACTIVATE") {
-        yield return null;
+      else if (Command == "ACTIVATE")
         Buttons[UnityEngine.Random.Range(0,4)].OnInteract();
-      }
       else {
         yield return null;
-        for (int i = 0; i < Command.Length; i++) {
+        for (int i = 0; i < Command.Length; i++)
           if (Command[i] != 'U' && Command[i] != 'L' && Command[i] != 'D' && Command[i] != 'R') {
             yield return "sendtochaterror I don't understand!";
             yield break;
           }
-        }
         for (int i = 0; i < Command.Length; i++) {
-          if (Command.Length > 1) yield return "strikemessage move #" + (i+1);
+          if (Command.Length > 1) yield return "strikemessage move #" + (i + 1);
           if (Command[i] == 'D')
             Buttons[0].OnInteract();
           else if (Command[i] == 'U')
