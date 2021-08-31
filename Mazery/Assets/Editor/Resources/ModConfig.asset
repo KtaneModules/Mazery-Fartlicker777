@@ -14,11 +14,11 @@ MonoBehaviour:
   id: Mazery
   title: Mazery
   author: me
-  description: 'Pink tiles do nothing, green makes you fight a monster, orange changes
-    your flavor to ora...what do you mean wrong game?
-
-
-    Manual can be found at ktane.timwi.de'
+  description: "Pink tiles do nothing, green makes you fight a monster, orange changes
+    your flavor to ora...what do you mean wrong game?\r\n\r\nConstruct a maze using
+    the colors shown and navigate to three goal nodes.\r\n\r\nManual can be found
+    at ktane.timwi.de or in the manuals folder of your game.\r\n\r\nIf there are any
+    bugs, contact Fartlicker777#9169 on Discord.\r\n"
   version: 
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 8b3c727779674e14aa02c38e30f1bc79, type: 3}
